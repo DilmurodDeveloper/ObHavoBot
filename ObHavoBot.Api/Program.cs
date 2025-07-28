@@ -9,7 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 builder.Services.AddScoped<ITelegramBotBroker, TelegramBotBroker>();
 builder.Services.AddScoped<IWeatherBroker, WeatherBroker>();
 builder.Services.AddTransient<IWeatherService, WeatherService>();

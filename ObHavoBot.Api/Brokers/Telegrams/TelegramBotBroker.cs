@@ -77,12 +77,12 @@ namespace ObHavoBot.Api.Brokers.Telegrams
                         {
                             new
                             {
-                                text = "🌤 Bugungi ob-havo",
+                                text = "🌤 Hozirgi",
                                 callback_data = callbackDataToday
                             },
                             new
                             {
-                                text = "📅 7 kunlik prognoz",
+                                text = "📅 5 kunlik",
                                 callback_data = callbackDataWeek
                             }
                         }

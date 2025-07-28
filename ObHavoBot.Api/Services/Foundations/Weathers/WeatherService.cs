@@ -15,10 +15,25 @@ namespace ObHavoBot.Api.Services.Foundations.Weathers
 
         public async ValueTask<Weather[]> RetrieveWeeklyWeatherForecastAsync(double latitude, double longitude)
         {
-            List<Weather> weeklyWeatherList =
-                await this.weatherBroker.Get7DayForecastByCoordinatesAsync(latitude, longitude);
+            List<Weather> forecast3hList =
+                await this.weatherBroker.Get5Day3HourForecastByCoordinatesAsync(latitude, longitude);
 
-            return weeklyWeatherList.ToArray();
+            var groupedByDay = forecast3hList
+                .GroupBy(f => f.Date.Date)
+                .Select(g => new Weather
+                {
+                    Date = g.Key,
+                    TempMin = g.Min(x => x.TempMin),
+                    TempMax = g.Max(x => x.TempMax),
+                    Description = g
+                        .GroupBy(x => x.Description)
+                        .OrderByDescending(x => x.Count())
+                        .First().Key
+                })
+                .Take(5)
+                .ToArray();
+
+            return groupedByDay;
         }
     }
 }

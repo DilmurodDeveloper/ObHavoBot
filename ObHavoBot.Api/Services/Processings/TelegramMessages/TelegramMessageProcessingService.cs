@@ -53,7 +53,6 @@ namespace ObHavoBot.Api.Services.Processings.TelegramMessages
             long chatId = callbackQuery.Message.Chat.Id;
             string data = callbackQuery.Data;
 
-            // Format: "today:41.3:69.2" yoki "week:41.3:69.2"
             Match match = Regex.Match(data, @"^(today|week):([0-9.]+):([0-9.]+)$");
 
             if (match.Success)
@@ -74,16 +73,16 @@ namespace ObHavoBot.Api.Services.Processings.TelegramMessages
                     await telegramBotBroker.SendTextMessageAsync(chatId, messageText);
                 }
 
-                if (type == "week")
+                else if (type == "week")
                 {
-                    var weathers = await weatherBroker.Get7DayForecastByCoordinatesAsync(lat, lon);
+                    var weathers = await weatherBroker.Get5Day3HourForecastByCoordinatesAsync(lat, lon);
 
-                    string messageText = "📅 7 kunlik ob-havo prognozi:\n\n";
+                    string messageText = "📅 5 kunlik ob-havo prognozi:\n\n";
 
                     foreach (var weather in weathers)
                     {
                         messageText += $"📆 {weather.Date:dd.MM.yyyy}: " +
-                                       $"{weather.Temperature}°C, " +
+                                       $"{weather.TempMin}°C - {weather.TempMax}°C, " +
                                        $"{weather.Description}\n";
                     }
 
