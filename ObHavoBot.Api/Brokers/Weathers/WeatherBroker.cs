@@ -32,32 +32,60 @@ namespace ObHavoBot.Api.Brokers.Weathers
             };
         }
 
-        public async ValueTask<List<Weather>> Get7DayForecastByCoordinatesAsync(double lat, double lon)
+        public async ValueTask<List<Weather>> Get5Day3HourForecastByCoordinatesAsync(double lat, double lon)
         {
             string url =
-                $"https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude=current,minutely,hourly,alerts&appid={apiKey}&units=metric";
+                $"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={apiKey}&units=metric";
 
             string response = await httpClient.GetStringAsync(url);
             using JsonDocument document = JsonDocument.Parse(response);
-            JsonElement dailyArray = document.RootElement.GetProperty("daily");
+            JsonElement root = document.RootElement;
 
-            var weatherList = new List<Weather>();
+            var listElement = root.GetProperty("list");
 
-            foreach (JsonElement day in dailyArray.EnumerateArray().Take(7))
+            var groupedByDate = new Dictionary<DateTime, List<(double TempMin, double TempMax, string Description)>>();
+
+            foreach (JsonElement item in listElement.EnumerateArray())
             {
-                DateTime date = DateTimeOffset.FromUnixTimeSeconds(day.GetProperty("dt").GetInt64()).DateTime;
-                double temperature = day.GetProperty("temp").GetProperty("day").GetDouble();
-                string description = day.GetProperty("weather")[0].GetProperty("description").GetString();
+                long dt = item.GetProperty("dt").GetInt64();
+                DateTime dateTimeUtc = DateTimeOffset.FromUnixTimeSeconds(dt).UtcDateTime;
+                DateTime date = dateTimeUtc.Date;
 
-                weatherList.Add(new Weather
+                double tempMin = item.GetProperty("main").GetProperty("temp_min").GetDouble();
+                double tempMax = item.GetProperty("main").GetProperty("temp_max").GetDouble();
+                string description = item.GetProperty("weather")[0].GetProperty("description").GetString();
+
+                if (!groupedByDate.ContainsKey(date))
+                    groupedByDate[date] = new List<(double, double, string)>();
+
+                groupedByDate[date].Add((tempMin, tempMax, description));
+            }
+
+            var forecasts = new List<Weather>();
+
+            foreach (var kvp in groupedByDate)
+            {
+                DateTime date = kvp.Key;
+                var tempsAndDescriptions = kvp.Value;
+
+                double minTemp = tempsAndDescriptions.Min(x => x.TempMin);
+                double maxTemp = tempsAndDescriptions.Max(x => x.TempMax);
+
+                string mostCommonDescription = tempsAndDescriptions
+                    .GroupBy(x => x.Description)
+                    .OrderByDescending(g => g.Count())
+                    .First().Key;
+
+                forecasts.Add(new Weather
                 {
                     Date = date,
-                    Temperature = temperature,
-                    Description = description
+                    TempMin = minTemp,
+                    TempMax = maxTemp,
+                    Description = mostCommonDescription
                 });
             }
 
-            return weatherList;
+            return forecasts.OrderBy(w => w.Date).Take(5).ToList();
         }
     }
 }
