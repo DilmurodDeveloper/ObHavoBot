@@ -84,9 +84,9 @@ namespace ObHavoBot.Api.Services.Processings.TelegramMessages
 
                     foreach (var weather in weathers)
                     {
-                        messageText += $"📆 Sana: {weather.Date:dd.MM.yyyy}\n: " +
+                        messageText += $"📆 Sana: {weather.Date:dd.MM.yyyy}\n" +
                                        $"🌡 Harorat: {weather.TempMin}°C - {weather.TempMax}°C\n" +
-                                       $"🌥 Tavsif: {weather.Description}\n";
+                                       $"🌥 Tavsif: {weather.Description}\n\n";
                     }
 
                     await telegramBotBroker.SendTextMessageAsync(chatId, messageText);
