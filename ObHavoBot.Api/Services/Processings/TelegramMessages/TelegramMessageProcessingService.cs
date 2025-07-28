@@ -77,13 +77,16 @@ namespace ObHavoBot.Api.Services.Processings.TelegramMessages
                 {
                     var weathers = await weatherBroker.Get5Day3HourForecastByCoordinatesAsync(lat, lon);
 
-                    string messageText = "📅 5 kunlik ob-havo prognozi:\n\n";
+                    var todayWeather = await weatherBroker.GetTodayWeatherByCoordinatesAsync(lat, lon);
+                    string city = todayWeather.City;
+
+                    string messageText = $"📅 {city}da 5 kunlik ob-havo prognozi:\n\n";
 
                     foreach (var weather in weathers)
                     {
-                        messageText += $"📆 {weather.Date:dd.MM.yyyy}: " +
-                                       $"{weather.TempMin}°C - {weather.TempMax}°C, " +
-                                       $"{weather.Description}\n";
+                        messageText += $"📆 Sana: {weather.Date:dd.MM.yyyy}\n: " +
+                                       $"🌡 Harorat: {weather.TempMin}°C - {weather.TempMax}°C\n" +
+                                       $"🌥 Tavsif: {weather.Description}\n";
                     }
 
                     await telegramBotBroker.SendTextMessageAsync(chatId, messageText);
